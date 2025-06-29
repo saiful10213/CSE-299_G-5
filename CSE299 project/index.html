@@ -1,82 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>National Voting Portal</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <title>NID Application</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <div class="container">
-      <div class="logo">
-        <h1>National Voting Portal</h1>
-      </div>
-      <nav>
-        <div class="menu-toggle" id="menu-toggle">&#9776;</div>
-        <ul class="nav-links" id="nav-links">
-          <li><a href="#">Home</a></li>
-          <li class="dropdown">
-            <a href="#" id="services-btn">Services ▾</a>
-            <ul class="dropdown-menu" id="dropdown-menu">
-              <li><a href="Services-NID-Card-Status.html">NID Card Status</a></li>
-              <li><a href="Services-NID-Card-Apply.html">NID Card Apply</a></li>
-              <li><a href="Services-NID-Card-Print.html">NID Card Print</a></li>
-              <li><a href="Services-Card-Correction.html">NID Card Correction</a></li>
-              <li><a href="Services-Birth-Certificate-Apply.html">Birth Certificate Apply</a></li>
-              <li><a href="Services-Birth-Certificate-Correction.html">Birth Certificate Correction</a></li>
-            </ul>
-          </li>
-          <li><a href="Information.html">Information</a></li>
-          <li><a href="Voting.html">Voting</a></li>
-          <li><a href="Voting-Count.html">Voting Count</a></li>
-          <li><a href="Notice.html">Notice</a></li>
-          <li><a href="Queries.html">Queries</a></li>
-          <li><a href="Contact-Us.html">Contact Us</a></li>
-          <li><a href="#">Log In</a></li>
-          <li><a href="#">Sign Up</a></li>
-        </ul>
-      </nav>
+  <div class="container">
+    <!-- Page 1 -->
+    <div class="page active" id="page1">
+      <div class="top-link"><a href="#" onclick="restart()">New Register</a></div>
+      <form onsubmit="return goToPage2()">
+        <label>Full Name</label>
+        <input type="text" id="name" required>
+        <label>Date of Birth</label>
+        <input type="date" id="dob" required>
+        <label>Verification (Enter: <span id="verificationDisplay"></span>)</label>
+        <input type="text" id="verificationInput" required>
+        <button type="submit">Continue</button>
+        <button type="button" onclick="restart()">Cancel</button>
+      </form>
     </div>
-  </header>
 
-  <section class="hero">
-    <div class="container">
-      <h2>Your Voice. Your Vote. Your Future.</h2>
-      <p>Register, check your status, and find all election resources here.</p>
-      <a href="#" class="btn">Register Now</a>
+    <!-- Page 2 -->
+    <div class="page" id="page2">
+      <div class="top-link"><a href="#" onclick="restart()">New Register</a></div>
+      <form onsubmit="return goToPage3()">
+        <label>Email or Phone</label>
+        <input type="text" id="contact" required>
+        <button type="submit">Send OTP</button>
+        <button type="button" onclick="restart()">Cancel</button>
+      </form>
     </div>
-  </section>
 
-  <footer>
-    <div class="container">
-      <p>© 2025 National Election Commission. All rights reserved.</p>
+    <!-- Page 3 -->
+    <div class="page" id="page3">
+      <div class="top-link"><a href="#" onclick="restart()">New Register</a></div>
+      <form onsubmit="return goToPage4()">
+        <label>Username</label>
+        <input type="text" id="username" required>
+        <label>Password</label>
+        <input type="password" id="password" required>
+        <label>Retype Password</label>
+        <input type="password" id="retypePassword" required>
+        <button type="submit">Continue</button>
+        <button type="button" onclick="restart()">Cancel</button>
+      </form>
     </div>
-  </footer>
 
-  <script>
-    // Toggle mobile menu
-    const toggle = document.getElementById('menu-toggle');
-    const navLinks = document.getElementById('nav-links');
-    toggle.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-    });
+    <!-- Page 4 -->
+    <div class="page" id="page4">
+      <div class="top-link"><a href="#" onclick="restart()">New Register</a></div>
+      <form onsubmit="return goToPage5()">
+        <label>Enter OTP (Sent: <span id="otpDisplay"></span>)</label>
+        <input type="text" id="otpInput" required>
+        <button type="submit">Continue</button>
+        <button type="button" onclick="restart()">Cancel</button>
+      </form>
+    </div>
 
-    // Toggle Services dropdown on click
-    const servicesBtn = document.getElementById('services-btn');
-    const dropdownMenu = document.getElementById('dropdown-menu');
+    <!-- Page 5 -->
+    <div class="page" id="page5">
+      <div class="top-link"><a href="#" onclick="restart()">New Register</a></div>
+      <form onsubmit="return goToPage6()">
+        <label>Username</label>
+        <input type="text" id="confirmUsername" required>
+        <label>Password</label>
+        <input type="password" id="confirmPassword" required>
+        <label>Retype Password</label>
+        <input type="password" id="confirmRetype" required>
+        <button type="submit">Continue</button>
+        <button type="button" onclick="restart()">Cancel</button>
+      </form>
+    </div>
 
-    servicesBtn.addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent link click
-      dropdownMenu.classList.toggle('show');
-    });
+    <!-- Page 6: Final Page (No New Register text here) -->
+    <div class="page" id="page6">
+      <h3 style="color: green;">✅ Account Created Successfully!</h3>
+      <p><strong>Name:</strong> <span id="finalName"></span></p>
+      <p><strong>Date of Birth:</strong> <span id="finalDob"></span></p>
+    </div>
+  </div>
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!servicesBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
-        dropdownMenu.classList.remove('show');
-      }
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

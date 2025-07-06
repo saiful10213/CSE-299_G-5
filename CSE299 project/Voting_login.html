@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voter Login & Voting Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #e3f2fd;
+      margin: 0;
+      padding: 40px 10px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      max-width: 400px;
+      width: 100%;
+      padding: 30px 30px 40px 30px;
+      border-radius: 15px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+    h2 {
+      color: #1976d2;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    input[type="text"], input[type="password"], input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    input:focus {
+      border-color: #1976d2;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      background-color: #1976d2;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 12px; /* Added space between buttons */
+    }
+    button:hover {
+      background-color: #125ca1;
+    }
+    .error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: -12px;
+      margin-bottom: 12px;
+    }
+    .link {
+      text-align: right;
+      margin-top: -12px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: #1976d2;
+      text-decoration: underline;
+    }
+    /* Voting dashboard styles */
+    #dashboard {
+      display: none;
+    }
+    #dashboard h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1976d2;
+    }
+    .candidate-list {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+    .candidate-list li {
+      background: #f1f9ff;
+      margin-bottom: 12px;
+      padding: 14px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.3s ease;
+    }
+    .candidate-list li:hover {
+      border-color: #1976d2;
+      background: #d9eaff;
+    }
+    .candidate-list li.selected {
+      border-color: #125ca1;
+      background: #a9cfff;
+      font-weight: 700;
+    }
+    #voteBtn {
+      background-color: #388e3c;
+    }
+    #voteBtn:hover {
+      background-color: #2e7d32;
+    }
+    #logoutBtn {
+      background-color: #d32f2f;
+      margin-top: 10px;
+    }
+    #logoutBtn:hover {
+      background-color: #b71c1c;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="loginContainer">
+    <h2>Voter Login</h2>
+    <form id="loginForm">
+      <label for="loginMobile">Mobile Number</label>
+      <input type="text" id="loginMobile" required placeholder="e.g. 017XXXXXXXX" />
+      
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" required placeholder="Enter your password" />
+      
+      <label for="loginOTP">OTP</label>
+      <input type="text" id="loginOTP" placeholder="Enter OTP after sending" />
+      <button type="button" id="sendOtpBtn">Send OTP</button>
+      <div id="otpMessage" style="color:green; margin-bottom:10px;"></div>
+
+      <div class="error" id="loginError"></div>
+      <button type="submit">Login</button>
+    </form>
+    <div class="link" id="forgotPassword">Forgot Password?</div>
+  </div>
+
+  <div class="container" id="resetPasswordContainer" style="display:none;">
+    <h2>Reset Password</h2>
+    <form id="resetPasswordForm">
+      <label for="resetMobile">Mobile Number</label>
+      <input type="text" id="resetMobile" required placeholder="Registered mobile number" />
+      
+      <label for="resetOTP">OTP</label>
+      <input type="text" id="resetOTP" placeholder="Enter OTP" />
+      <button type="button" id="sendResetOtpBtn">Send OTP</button>
+
+      <label for="newPassword">New Password</label>
+      <input type="password" id="newPassword" required placeholder="New password" />
+      <label for="confirmNewPassword">Confirm New Password</label>
+      <input type="password" id="confirmNewPassword" required placeholder="Confirm new password" />
+      <div class="error" id="resetError"></div>
+      <button type="submit">Reset Password</button>
+      <div class="link" id="backToLogin">Back to Login</div>
+    </form>
+  </div>
+
+  <div class="container" id="dashboard">
+    <h3>Voting Dashboard</h3>
+    <ul class="candidate-list" id="candidateList">
+      <li data-id="1">Candidate A</li>
+      <li data-id="2">Candidate B</li>
+      <li data-id="3">Candidate C</li>
+    </ul>
+    <button id="voteBtn" disabled>Cast Vote</button>
+    <button id="logoutBtn">Logout</button>
+    <div id="voteMessage" style="margin-top:15px;"></div>
+  </div>
+
+<script>
+  // Simulated user DB (in reality use backend & DB)
+  const users = [
+    { mobile: "01712345678", password: "pass1234" },
+    { mobile: "01987654321", password: "mypassword" }
+  ];
+
+  let generatedLoginOTP = null;
+  let generatedResetOTP = null;
+  let loggedInUser = null;
+  let selectedCandidateId = null;
+
+  const loginForm = document.getElementById('loginForm');
+  const sendOtpBtn = document.getElementById('sendOtpBtn');
+  const loginError = document.getElementById('loginError');
+  const otpMessage = document.getElementById('otpMessage');
+
+  const resetPasswordContainer = document.getElementById('resetPasswordContainer');
+  const resetPasswordForm = document.getElementById('resetPasswordForm');
+  const resetError = document.getElementById('resetError');
+  const sendResetOtpBtn = document.getElementById('sendResetOtpBtn');
+
+  const loginContainer = document.getElementById('loginContainer');
+  const dashboard = document.getElementById('dashboard');
+  const candidateList = document.getElementById('candidateList');
+  const voteBtn = document.getElementById('voteBtn');
+  const voteMessage = document.getElementById('voteMessage');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  // Send OTP for login
+  sendOtpBtn.addEventListener('click', () => {
+    const mobile = document.getElementById('loginMobile').value.trim();
+    if (!mobile) {
+      loginError.textContent = "Please enter your mobile number.";
+      return;
+    }
+    if (!users.find(u => u.mobile === mobile)) {
+      loginError.textContent = "Mobile number not registered.";
+      return;
+    }
+    loginError.textContent = "";
+    generatedLoginOTP = (Math.floor(1000 + Math.random() * 9000)).toString();
+    otpMessage.textContent = `OTP sent: ${generatedLoginOTP} (simulated)`;
+  });
+
+  // Login form submit
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    loginError.textContent = "";
+    otpMessage.textContent = "";
+    const mobile = document.getElementById('loginMobile').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const otp = document.getElementById('loginOTP').value.trim();
+
+    const user = users.find(u => u.mobile === mobile);
+    if (!user) {
+      loginError.textContent = "Mobile number not registered.";
+      return;
+    }
+    if (user.password !== password) {
+      loginError.textContent = "Incorrect password.";
+      return;
+    }
+    if (otp !== generatedLoginOTP) {
+      loginError.textContent = "Incorrect or missing OTP.";
+      return;
+    }
+
+    loggedInUser = user;
+    loginContainer.style.display = 'none';
+    dashboard.style.display = 'block';
+  });
+
+  // Voting logic
+  candidateList.addEventListener('click', e => {
+    if (e.target.tagName === 'LI') {
+      Array.from(candidateList.children).forEach(li => li.classList.remove('selected'));
+      e.target.classList.add('selected');
+      selectedCandidateId = e.target.dataset.id;
+      voteBtn.disabled = false;
+      voteMessage.textContent = "";
+    }
+  });
+
+  voteBtn.addEventListener('click', () => {
+    if (!selectedCandidateId) return;
+    voteMessage.style.color = 'green';
+    voteMessage.textContent = `You voted for Candidate ${selectedCandidateId}. Thank you for voting!`;
+    voteBtn.disabled = true;
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    loggedInUser = null;
+    selectedCandidateId = null;
+    document.getElementById('loginForm').reset();
+    document.getElementById('loginOTP').value = '';
+    loginError.textContent = '';
+    otpMessage.textContent = '';
+    voteMessage.textContent = '';
+    voteBtn.disabled = true;
+    Array.from(candidateList.children).forEach(li => li.classList.remove('selected'));
+    dashboard.style.display = 'none';
+    resetPasswordContainer.style.display = 'none';
+    loginContainer.style.display = 'block';
+  });
+
+  // Forgot password link
+  document.getElementById('forgotPassword').addEventListener('click', () => {
+    loginContainer.style.display = 'none';
+    resetPasswordContainer.style.display = 'block';
+    resetPasswordForm.reset();
+    resetError.textContent = '';
+  });
+
+  // Send OTP for reset password
+  sendResetOtpBtn.addEventListener('click', () => {
+    const mobile = document.getElementById('resetMobile').value.trim();
+    if (!mobile) {
+      resetError.textContent = "Please enter your mobile number.";
+      return;
+    }
+    if (!users.find(u => u.mobile === mobile)) {
+      resetError.textContent = "Mobile number not registered.";
+      return;
+    }
+    resetError.textContent = "";
+    generatedResetOTP = (Math.floor(1000 + Math.random() * 9000)).toString();
+    alert(`Reset OTP sent: ${generatedResetOTP} (simulated)`);
+  });
+
+  // Reset password submit
+  resetPasswordForm.addEventListener('submit', e => {
+    e.preventDefault();
+    resetError.textContent = "";
+    const mobile = document.getElementById('resetMobile').value.trim();
+    const otp = document.getElementById('resetOTP').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+    if (otp !== generatedResetOTP) {
+      resetError.textContent = "Incorrect OTP.";
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      resetError.textContent = "Passwords do not match.";
+      return;
+    }
+
+    // Update password in simulated DB
+    const user = users.find(u => u.mobile === mobile);
+    if (user) {
+      user.password = newPassword;
+      alert("Password reset successfully. Please login with new password.");
+      resetPasswordContainer.style.display = 'none';
+      loginContainer.style.display = 'block';
+    } else {
+      resetError.textContent = "Mobile number not registered.";
+    }
+  });
+
+  // Back to login from reset password
+  document.getElementById('backToLogin').addEventListener('click', () => {
+    resetPasswordContainer.style.display = 'none';
+    loginContainer.style.display = 'block';
+  });
+</script>
+
+</body>
+</html>

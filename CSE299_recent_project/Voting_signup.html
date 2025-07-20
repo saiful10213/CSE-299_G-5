@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voter Sign-Up Portal</title>
+  <style>
+    body {
+      position: relative;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #e3f2fd;
+      padding: 40px 10px;
+    }
+    /* Watermark background logo */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Logo_of_Election_Commission_of_Bangladesh.svg/512px-Logo_of_Election_Commission_of_Bangladesh.svg.png');
+      background-repeat: no-repeat;
+      background-size: 300px;
+      opacity: 0.05;
+      width: 300px;
+      height: 300px;
+      z-index: 0;
+      pointer-events: none; /* So clicks go through */
+    }
+    .container {
+      position: relative;
+      background: rgba(255, 255, 255, 0.95);
+      max-width: 700px;
+      margin: auto;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      z-index: 1;
+    }
+    h2 {
+      text-align: center;
+      color: #1976d2;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    input[type="file"],
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      background: #f9f9f9;
+      transition: border-color 0.3s ease;
+    }
+    input:focus {
+      border-color: #1976d2;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: none;
+      background-color: #1976d2;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #125ca1;
+    }
+    .action-btn {
+      width: 49%;
+      display: inline-block;
+    }
+    #photoVideo, #photoCanvas {
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+      background: #000;
+    }
+    #photoCanvas {
+      display: none;
+    }
+    .error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Voter Sign-Up Portal</h2>
+    <form id="signupForm">
+      <div class="form-group">
+        <label>Upload NID Front Side (with EC logo & signature)</label>
+        <input type="file" id="nidFront" accept="image/*" required />
+      </div>
+      <div class="form-group">
+        <label>Upload NID Back Side</label>
+        <input type="file" id="nidBack" accept="image/*" required />
+      </div>
+      <div class="form-group">
+        <label>Upload Passport Size Photo</label>
+        <input type="file" id="photoUpload" accept="image/*" required />
+        <button type="button" onclick="openCamera()">Capture via Camera</button>
+        <video id="photoVideo" autoplay style="display:none; border-radius:10px;"></video>
+        <canvas id="photoCanvas"></canvas>
+        <button type="button" onclick="capturePhoto()" style="display:none;">Capture Photo</button>
+      </div>
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input type="text" id="mobile" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" required />
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="confirmPassword" required />
+        <div id="passwordError" class="error"></div>
+      </div>
+      <div class="form-group">
+        <label>Enter OTP</label>
+        <input type="text" id="otp" />
+        <div class="button-group">
+          <button type="button" onclick="sendOTP()">Send OTP</button>
+          <button type="button" onclick="verifyOTP()">Verify OTP</button>
+        </div>
+        <div id="otpError" class="error"></div>
+      </div>
+      <button type="submit">Sign Up</button>
+    </form>
+  </div>
+
+  <script>
+    let generatedOTP = null;
+    const existingNIDs = ["1234567890", "9876543210"];
+    const existingMobiles = ["01712345678", "01987654321"];
+
+    async function performOCR(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      try {
+        const response = await fetch("https://api.ocr.space/parse/image", {
+          method: "POST",
+          headers: {
+            apikey: "your_ocr_space_api_key",
+          },
+          body: formData,
+        });
+        const result = await response.json();
+        return result.ParsedResults?.[0]?.ParsedText || "";
+      } catch (error) {
+        console.error("OCR error:", error);
+        return "";
+      }
+    }
+
+    function openCamera() {
+      const video = document.getElementById("photoVideo");
+      const captureBtn = document.querySelector("button[onclick='capturePhoto()']");
+      video.style.display = "block";
+      captureBtn.style.display = "inline-block";
+
+      navigator.mediaDevices
+        .getUserMedia({ video: { width: 300, height: 400 } })
+        .then((stream) => {
+          video.srcObject = stream;
+        })
+        .catch((error) => {
+          alert("Camera access denied or not available.");
+        });
+    }
+
+    function capturePhoto() {
+      const video = document.getElementById("photoVideo");
+      const canvas = document.getElementById("photoCanvas");
+      canvas.width = 300;
+      canvas.height = 400;
+      const context = canvas.getContext("2d");
+      context.drawImage(video, 0, 0, 300, 400);
+      canvas.toBlob((blob) => {
+        const fileInput = document.getElementById("photoUpload");
+        const dataTransfer = new DataTransfer();
+        const file = new File([blob], "passport_photo.png", { type: "image/png" });
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        alert("Photo captured and set as passport photo.");
+      }, "image/png");
+    }
+
+    document.getElementById("signupForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const enteredOTP = document.getElementById("otp").value;
+      const mobile = document.getElementById("mobile").value;
+      const nidFront = document.getElementById("nidFront").files[0];
+
+      if (!nidFront) {
+        alert("Please upload NID front side.");
+        return;
+      }
+
+      const text = await performOCR(nidFront);
+      if (!text.toLowerCase().includes("election commission") || !text.toLowerCase().includes("signature")) {
+        alert("NID must contain Election Commission logo and signature (detected via OCR).\nOCR Result: " + text);
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        document.getElementById("passwordError").textContent = "Passwords do not match.";
+        return;
+      } else {
+        document.getElementById("passwordError").textContent = "";
+      }
+
+      if (enteredOTP !== generatedOTP) {
+        document.getElementById("otpError").textContent = "Incorrect OTP.";
+        return;
+      } else {
+        document.getElementById("otpError").textContent = "";
+      }
+
+      if (existingMobiles.includes(mobile)) {
+        alert("Mobile number already registered.");
+        return;
+      }
+
+      if (existingNIDs.includes(nidFront.name)) {
+        alert("NID already registered.");
+        return;
+      }
+
+      alert("Sign-up successful! Data will be processed.");
+
+      // Redirect to login page after success
+      window.location.href = "login.html";
+    });
+
+    function sendOTP() {
+      generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+      alert("Your OTP is: " + generatedOTP);
+    }
+
+    function verifyOTP() {
+      const enteredOTP = document.getElementById("otp").value;
+      if (enteredOTP !== generatedOTP) {
+        document.getElementById("otpError").textContent = "Incorrect OTP.";
+      } else {
+        document.getElementById("otpError").textContent = "OTP verified successfully.";
+      }
+    }
+  </script>
+</body>
+</html>
